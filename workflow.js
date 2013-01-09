@@ -39,7 +39,7 @@
     }
     Workflow.prototype.triggerEvent = function(event, workflowName) {
       var workflow
-        , transitionCallback;
+        , transitionOccurredCallback;
       workflow = _.detect(this.model.workflows, __bind(function(w) {
         return w.name === (workflowName ? workflowName : 'default');
       }, this));
@@ -48,19 +48,19 @@
           return e.name === event && e.from === this.model.get(workflow.attrName);
         }, this));
         if (event) {
+          transitionOccurredCallback = 'on';
+          _.each(event.name.split(':'), function(part) {
+            transitionOccurredCallback += part.charAt(0).toUpperCase() + part.slice(1);
+          });
           if (workflow.name === 'default') {
             this.model.trigger("transition:from:" + (this.model.get(workflow.attrName)));
           } else {
             this.model.trigger("transition:from:" + workflow.name + ":" + (this.model.get(workflow.attrName)));
           }
-          transitionCallback = 'on';
-          _.each(event.name.split(':'), function(part) {
-            transitionCallback += part.charAt(0).toUpperCase() + part.slice(1);
-          });
-          if (this.model[transitionCallback]) {
-            this.model[transitionCallback].call(this);
-          }
           this.model.set(workflow.attrName, event.to);
+          if (this.model[transitionOccurredCallback]) {
+            this.model[transitionOccurredCallback].call(this);
+          }
           if (workflow.name === 'default') {
             this.model.trigger("transition:to:" + (this.model.get(workflow.attrName)));
           } else {
